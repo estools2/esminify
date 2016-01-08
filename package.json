@@ -1,0 +1,30 @@
+{
+  "name": "esminify",
+  "version": "1.0.0",
+  "description": "The ECMAScript(javascript) minify tool",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuzhigang33/esminify.git"
+  },
+  "keywords": [
+    "es6",
+    "minify"
+  ],
+  "author": "yuzhigang33",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yuzhigang33/esminify/issues"
+  },
+  "homepage": "https://github.com/yuzhigang33/esminify#readme",
+  "dependencies": {
+    "escodegen": "~1.8.0",
+    "esmangle2": "~1.0.3",
+    "esprima": "~2.7.1",
+    "lodash": "~3.10.1",
+    "xfs": "~0.2.0"
+  }
+}
