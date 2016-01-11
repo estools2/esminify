@@ -90,4 +90,6 @@ function minify(opt) {
   });
 }
 
-module.exports.compile = minify;
+// module.exports.compile = compile;
+
+module.exports.processFiles = minify;

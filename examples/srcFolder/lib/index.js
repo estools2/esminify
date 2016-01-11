@@ -1,5 +1,5 @@
 /*!
- * esminify: examples/srcFolder/lib/index.js
+ * esminify: index.js
  * Authors  : 枫弦 <fengxian.yzg@alibaba-inc.com> (https://github.com/yuzhigang33)
  * Create   : 2016-01-08 16:30:28
  * CopyRight 2016 (c) Alibaba Group
@@ -14,6 +14,14 @@ const esmangle = require('esmangle2');
 const escodegen = require('escodegen');
 
 const syncfs = fs.sync();
+const defaultFormat = {
+  renumber: true,
+  hexadecimal: true,
+  escapeless: true,
+  compact: true,
+  semicolons: false,
+  parentheses: false
+};
 
 function checkRequiredOpt(opt) {
   if (typeof opt !== 'object') {
@@ -29,6 +37,7 @@ function minify(opt) {
   let srcDir = opt.srcDir;
   let destDir = opt.destDir || srcDir;
   let excludeDir = opt.excludeDir;
+  let userFormat = opt.format || defaultFormat;
   let files = fs.readdirSync(srcDir);
 
   if (excludeDir) {
@@ -50,8 +59,6 @@ function minify(opt) {
         getFiles(srcNewDir, destNewDir, subFiles);
       } else {
         if (/\.(js)$/.test(file)) {
-          console.log(srcNewDir, '111');
-          console.log(destNewDir, '222');
           tobeReadFiles.push(srcNewDir);
           tobeWriteFiles.push(destNewDir);
         }
@@ -59,8 +66,6 @@ function minify(opt) {
     });
   }
   getFiles(srcDir, destDir, files);
-  console.log('=====================');
-// process.exit();
 
   tobeReadFiles.forEach(function (file, idx) {
     fs.readFile(file, function (err, data) {
@@ -73,14 +78,7 @@ function minify(opt) {
       });
       let result = esmangle.mangle(optimized);
       let output = escodegen.generate(result, {
-        format: {
-          renumber: true,
-          hexadecimal: true,
-          escapeless: true,
-          compact: true,
-          semicolons: false,
-          parentheses: false
-        }
+        format: userFormat
       });
       fs.writeFile(tobeWriteFiles[idx], output, function (err) {
         if (err) {
@@ -92,4 +90,6 @@ function minify(opt) {
   });
 }
 
-module.exports.compile = minify;
+// module.exports.compile = compile;
+
+module.exports.processFiles = minify;

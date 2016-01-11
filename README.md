@@ -6,7 +6,7 @@ const esminify = require('esminify');
 let option = {
   srcDir: path.join(__dirname, 'out/release')
 }
-esminify.compile(option);
+esminify.processFiles(option);
 ```
 
 - destDir为可选配置项，如果不传则会覆盖srcDir中的文件
@@ -16,7 +16,7 @@ let option = {
   srcDir: path.join(__dirname, './'),
   destDir: path.join(__dirname, 'out/release')
 }
-esminify.compile(option);
+esminify.processFiles(option);
 ```
 
 - format为混淆代码时的参数配置，默认配置如下。支持的所有option参见 escodegen的api (https://github.com/estools/escodegen/wiki/API)
@@ -34,5 +34,5 @@ let option = {
     parentheses: false
   }
 }
-esminify.compile(option);
+esminify.processFiles(option);
 ```

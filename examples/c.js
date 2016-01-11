@@ -20,4 +20,4 @@ const option = {
     parentheses: false
   }
 }
-esminify.compile(option);
+esminify.processFiles(option);

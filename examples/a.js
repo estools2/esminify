@@ -11,4 +11,4 @@ const esminify = require('../');
 const option = {
   srcDir: path.join(__dirname, './srcFolder')
 }
-esminify.compile(option);
+esminify.processFiles(option);

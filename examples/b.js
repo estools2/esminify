@@ -12,4 +12,4 @@ const option = {
   srcDir: path.join(__dirname, './srcFolder'),
   destDir: path.join(__dirname, './destFolder')
 }
-esminify.compile(option);
+esminify.processFiles(option);
