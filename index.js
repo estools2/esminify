@@ -66,6 +66,16 @@ function minify(opt, callback) {
     return;
   }
 
+  function checkExclude(file) {
+    var flag = false;
+    exclude.forEach(function (rule) {
+      if (rule.test(file)) {
+        flag = true;
+      }
+    });
+    return flag;
+  }
+
   function execFile(obj) {
     var code = fs.readFileSync(obj.input).toString();
     let ast = esprima.parse(code);
@@ -83,6 +93,9 @@ function minify(opt, callback) {
   if (stats.isDirectory()) {
     fs.walk(src, /\.js$/, function (err, file, done) {
       var relfile = file.substr(src.length);
+      if (checkExclude(relfile)) {
+        return done();
+      }
       execFile({
         input: file,
         output: path.join(dest, relfile)
