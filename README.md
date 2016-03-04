@@ -1,30 +1,41 @@
 # esminify
 
-- srcDir为必传选项
+## CLI usage
+
 ```
-const esminify = require('esminify');
-let option = {
-  srcDir: path.join(__dirname, 'out/release')
-}
-esminify.processFiles(option);
+esminify dir -o dir.release
 ```
 
-- destDir为可选配置项，如果不传则会覆盖srcDir中的文件
-```
-const esminify = require('esminify');
-let option = {
-  srcDir: path.join(__dirname, './'),
-  destDir: path.join(__dirname, 'out/release')
-}
-esminify.processFiles(option);
-```
+## Programable API
 
-- format为混淆代码时的参数配置，默认配置如下。支持的所有option参见 escodegen的api (https://github.com/estools/escodegen/wiki/API)
+take look at this example
+
+### `esminify.processFiles(options)`
+```
+const esminify = require('esminify');
+esminify.minify({
+  input: path.join(__dirname, 'your_source_dir'),
+  output: path.join(__dirname, 'your_dest_dir')
+});
+```
+`options` contains:
+
+* input
+
+  input path, can be an file or dir
+
+* output
+
+  output path
+
+* format
+
+  为混淆代码时的参数配置，默认配置如下。支持的所有option参见 escodegen的api (https://github.com/estools/escodegen/wiki/API)
 ```
 const esminify = require('esminify');
 let option = {
-  srcDir: path.join(__dirname, './'),
-  destDir: path.join(__dirname, 'out/release'),
+  input: path.join(__dirname, './'),
+  output: path.join(__dirname, 'out/release'),
   format: {
     renumber: true,
     hexadecimal: true,
@@ -34,5 +45,5 @@ let option = {
     parentheses: false
   }
 }
-esminify.processFiles(option);
+esminify.minify(option);
 ```

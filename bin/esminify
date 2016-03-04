@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+const esminify = require('../index');
+const cmd = require('commander');
+
+function parseExclude(str) {
+  var rules = [];
+  if (!str) {
+    return rules;
+  }
+  str.split(',').forEach(function (rule) {
+    rule = rule.trim();
+    if (!rule) {
+      return;
+    }
+    rules.push(genRule(rule));
+  });
+  return rules;
+}
+
+function genRule(rule) {
+  if (rule.indexOf('/') === 0) {
+    rule = '^' + rule;
+  }
+  return new RegExp(rule.replace(/\./g, '\\.').replace(/\*/g, '.*'));
+}
+
+cmd
+  .usage('[options] your_code_dir')
+  .description('minify you js code')
+  .option('-e, --exclude [value]', 'exclude dirs')
+  .option('-o, --output [value]', 'set the output dir')
+  .parse(process.argv);
+
+var input = cmd.args[0];
+var args = cmd;
+var cwd = process.cwd();
+var path = require('path');
+
+var exclude = parseExclude(args.exclude);
+
+esminify.minify({
+  input: path.join(cwd, input),
+  output: args.ouput ? path.join(cwd, args.ouput) : null,
+  exclude: args.exclude
+});

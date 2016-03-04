@@ -6,6 +6,7 @@
  */
 
 'use strict';
+
 const fs = require('xfs');
 const _ = require('lodash');
 const path = require('path');
@@ -13,7 +14,6 @@ const esprima = require('esprima');
 const esmangle = require('esmangle2');
 const escodegen = require('escodegen');
 
-const syncfs = fs.sync();
 const defaultFormat = {
   renumber: true,
   hexadecimal: true,
@@ -24,23 +24,86 @@ const defaultFormat = {
 };
 
 function checkRequiredOpt(opt) {
+  if (!opt.input) {
+    opt.input = opt.srcDir;
+  }
+  if (!opt.output) {
+    opt.output = opt.destDir;
+  }
+
   if (typeof opt !== 'object') {
     throw new Error('option must be an object.');
   }
-  if (!opt.srcDir || typeof opt.srcDir !== 'string') {
+  if (!opt.input) {
     throw new Error('missing dir in option.');
   }
 }
 
-function minify(opt) {
+/**
+ * minify code
+ * @param  {Object} opt
+ *         - input
+ *         - output
+ *         - exclude
+ *         - format
+ */
+function minify(opt, callback) {
   checkRequiredOpt(opt);
-  let srcDir = opt.srcDir;
-  let destDir = opt.destDir || srcDir;
-  let excludeDir = opt.excludeDir;
+  let src = opt.input.replace(/(\/|\\)$/, '');
+  let dest = opt.output || src + '.min';
+  let exclude = opt.exclude || opt.excludeDir;
   let userFormat = opt.format || defaultFormat;
-  let files = fs.readdirSync(srcDir);
 
-  if (excludeDir) {
+  let stats;
+  try {
+    stats = fs.statSync(src);
+  } catch (e) {
+    if (callback) {
+      callback(new Error('input error' + e.message));
+    } else {
+      console.error('input error' + e.message);
+    }
+    return;
+  }
+
+  function execFile(obj) {
+    var code = fs.readFileSync(obj.input).toString();
+    let ast = esprima.parse(code);
+    let optimized = esmangle.optimize(ast, null, {
+      inStrictCode: true
+    });
+    let result = esmangle.mangle(optimized);
+    let output = escodegen.generate(result, {
+      format: userFormat
+    });
+    fs.sync().save(obj.output, output);
+    console.log('minify file:', obj.input, '>', obj.output);
+  }
+
+  if (stats.isDirectory()) {
+    fs.walk(src, /\.js$/, function (err, file, done) {
+      var relfile = file.substr(src.length);
+      execFile({
+        input: file,
+        output: path.join(dest, relfile)
+      });
+      done();
+    }, function (err) {
+      if (callback) {
+        callback(err);
+      } else {
+        console.log('');
+      }
+    });
+  } else {
+    execFile({
+      input: opt.input,
+      output: opt.output
+    });
+  }
+
+  /*
+  if (exclude) {
     _.remove(files, function (f) {
       return excludeDir.indexOf(f) >= 0;
     });
@@ -88,8 +151,10 @@ function minify(opt) {
       });
     });
   });
+  */
 }
 
 // module.exports.compile = compile;
+exports.processFiles = minify;
 
-module.exports.processFiles = minify;
+exports.minify = minify;
