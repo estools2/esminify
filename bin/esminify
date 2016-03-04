@@ -30,6 +30,7 @@ cmd
   .description('minify you js code')
   .option('-e, --exclude [value]', 'exclude dirs')
   .option('-o, --output [value]', 'set the output dir')
+  .option('-c, --config [value]', 'config the minify format')
   .parse(process.argv);
 
 var input = cmd.args[0];
@@ -42,5 +43,5 @@ var exclude = parseExclude(args.exclude);
 esminify.minify({
   input: path.join(cwd, input),
   output: args.ouput ? path.join(cwd, args.ouput) : null,
-  exclude: args.exclude
+  exclude: exclude
 });
