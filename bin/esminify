@@ -28,9 +28,11 @@ function genRule(rule) {
 cmd
   .usage('[options] your_code_dir')
   .description('minify you js code')
-  .option('-e, --exclude [value]', 'exclude dirs')
+  .option('-x, --exclude [value]', 'exclude dirs')
+  .option('--force-override-exclude', 'force override the default exclude rules')
   .option('-o, --output [value]', 'set the output dir')
   .option('-c, --config [value]', 'config the minify format')
+  .option('--no-strict', 'compress without strict mod')
   .parse(process.argv);
 
 var input = cmd.args[0];
@@ -42,6 +44,8 @@ var exclude = parseExclude(args.exclude);
 
 esminify.minify({
   input: path.join(cwd, input),
-  output: args.ouput ? path.join(cwd, args.ouput) : null,
-  exclude: exclude
+  output: args.output ? path.join(cwd, args.output) : null,
+  exclude: exclude,
+  forceOverrideExclude: args.forceOverrideExclude,
+  strictMod: args.noStrict ? false : true
 });

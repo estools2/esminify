@@ -3,8 +3,15 @@
 ## CLI usage
 
 ```
-esminify dir -o dir.release
+esminify -o dir.release srcdir
 ```
+
+help:
+```
+esminify
+```
+
+
 
 ## Programable API
 
@@ -28,7 +35,7 @@ esminify.minify({
 
   output path
 
-* format
+* config
 
   为混淆代码时的参数配置，默认配置如下。支持的所有option参见 escodegen的api (https://github.com/estools/escodegen/wiki/API)
 ```
@@ -36,7 +43,7 @@ const esminify = require('esminify');
 let option = {
   input: path.join(__dirname, './'),
   output: path.join(__dirname, 'out/release'),
-  format: {
+  config: {
     renumber: true,
     hexadecimal: true,
     escapeless: true,

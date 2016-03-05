@@ -13,6 +13,7 @@ const path = require('path');
 const esprima = require('esprima');
 const esmangle = require('esmangle2');
 const escodegen = require('escodegen');
+const cwd = process.cwd();
 
 const defaultFormat = {
   renumber: true,
@@ -39,6 +40,20 @@ function checkRequiredOpt(opt) {
   }
 }
 
+function execFile(obj, strictMod) {
+  console.log('minify file:', obj.input.substr(cwd.length + 1), '>', obj.output.substr(cwd.length + 1));
+  var code = fs.readFileSync(obj.input).toString();
+  let ast = esprima.parse(code);
+  let optimized = esmangle.optimize(ast, null, {
+    inStrictCode: strictMod
+  });
+  let result = esmangle.mangle(optimized);
+  let output = escodegen.generate(result, {
+    format: userFormat
+  });
+  fs.sync().save(obj.output, output);
+}
+
 /**
  * minify code
  * @param  {Object} opt
@@ -46,14 +61,23 @@ function checkRequiredOpt(opt) {
  *         - output
  *         - exclude
  *         - format
+ *         - strictMod
  */
 function minify(opt, callback) {
   checkRequiredOpt(opt);
   let src = opt.input.replace(/(\/|\\)$/, '');
   let dest = opt.output || src + '.min';
-  let exclude = opt.exclude || opt.excludeDir;
-  let userFormat = opt.format || defaultFormat;
+  let exclude = opt.exclude;
+  let userFormat = opt.config || defaultFormat;
+  let strictMod = opt.strictMod;
 
+  if (!opt.forceOverrideExclude) {
+    exclude = exclude.concat([
+      /\.git\//,
+      /\.svn\//,
+      /node_modules\//
+    ]);
+  }
   let stats;
   try {
     stats = fs.statSync(src);
@@ -76,95 +100,31 @@ function minify(opt, callback) {
     return flag;
   }
 
-  function execFile(obj) {
-    var code = fs.readFileSync(obj.input).toString();
-    let ast = esprima.parse(code);
-    let optimized = esmangle.optimize(ast, null, {
-      inStrictCode: true
-    });
-    let result = esmangle.mangle(optimized);
-    let output = escodegen.generate(result, {
-      format: userFormat
-    });
-    fs.sync().save(obj.output, output);
-    console.log('minify file:', obj.input, '>', obj.output);
-  }
-
   if (stats.isDirectory()) {
     fs.walk(src, /\.js$/, function (err, file, done) {
       var relfile = file.substr(src.length);
       if (checkExclude(relfile)) {
+        //console.log('exclude:', relfile);
         return done();
       }
       execFile({
         input: file,
         output: path.join(dest, relfile)
-      });
+      }, strictMod);
       done();
     }, function (err) {
       if (callback) {
         callback(err);
       } else {
-        console.log('');
+        console.log('compress file error', relfile, err.message);
       }
     });
   } else {
     execFile({
       input: opt.input,
       output: opt.output
-    });
+    }, strictMod);
   }
-
-  /*
-  if (exclude) {
-    _.remove(files, function (f) {
-      return excludeDir.indexOf(f) >= 0;
-    });
-  }
-
-  let tobeReadFiles = [];
-  let tobeWriteFiles = [];
-  function getFiles(src, dest, fileArr) {
-    fileArr.forEach(function (file) {
-      let srcNewDir = src + '/' + file;
-      let destNewDir = dest + '/' + file;
-      let sts = fs.statSync(srcNewDir);
-      if (sts.isDirectory()) {
-        syncfs.mkdir(destNewDir);
-        let subFiles = fs.readdirSync(srcNewDir);
-        getFiles(srcNewDir, destNewDir, subFiles);
-      } else {
-        if (/\.(js)$/.test(file)) {
-          tobeReadFiles.push(srcNewDir);
-          tobeWriteFiles.push(destNewDir);
-        }
-      }
-    });
-  }
-  getFiles(srcDir, destDir, files);
-
-  tobeReadFiles.forEach(function (file, idx) {
-    fs.readFile(file, function (err, data) {
-      if (err) {
-        return console.log(err);
-      }
-      let ast = esprima.parse(data.toString());
-      let optimized = esmangle.optimize(ast, null, {
-        inStrictCode: true
-      });
-      let result = esmangle.mangle(optimized);
-      let output = escodegen.generate(result, {
-        format: userFormat
-      });
-      fs.writeFile(tobeWriteFiles[idx], output, function (err) {
-        if (err) {
-          return console.log(err);
-        }
-        console.log(tobeWriteFiles[idx], 'minify success');
-      });
-    });
-  });
-  */
 }
 
 // module.exports.compile = compile;
