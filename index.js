@@ -40,7 +40,7 @@ function checkRequiredOpt(opt) {
   }
 }
 
-function execFile(obj, strictMod) {
+function execFile(obj, format, strictMod) {
   console.log('minify file:', obj.input.substr(cwd.length + 1), '>', obj.output.substr(cwd.length + 1));
   var code = fs.readFileSync(obj.input).toString();
   let ast = esprima.parse(code);
@@ -49,7 +49,7 @@ function execFile(obj, strictMod) {
   });
   let result = esmangle.mangle(optimized);
   let output = escodegen.generate(result, {
-    format: userFormat
+    format: format
   });
   fs.sync().save(obj.output, output);
 }
@@ -110,20 +110,24 @@ function minify(opt, callback) {
       execFile({
         input: file,
         output: path.join(dest, relfile)
-      }, strictMod);
+      }, userFormat, strictMod);
       done();
     }, function (err) {
-      if (callback) {
-        callback(err);
-      } else {
-        console.log('compress file error', relfile, err.message);
+      if (err) {
+        if (callback) {
+          callback(err);
+        } else {
+          console.log('compress file error', err.message);
+        }
+        return;
       }
+      callback && callback();
     });
   } else {
     execFile({
       input: opt.input,
       output: opt.output
-    }, strictMod);
+    }, userFormat, strictMod);
   }
 }
 
