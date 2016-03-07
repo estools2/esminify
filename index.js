@@ -118,6 +118,10 @@ function minify(opt, callback) {
 
   if (stats.isDirectory()) {
     fs.walk(src, /\.js$/, function (err, file, done) {
+      if (err) {
+        console.log(err.stack);
+        return done();
+      }
       var relfile = file.substr(src.length);
       if (checkExclude(relfile)) {
         //console.log('exclude:', relfile);
