@@ -5,7 +5,9 @@
 ```
 esminify -o dir.release srcdir
 
-exminify -o dir.release --cmd true srcdir
+esminify -o dir.release --cmd true srcdir
+
+esminify -o dir.release --cmd true --exclude /a,/b srcdir
 ```
 
 help:

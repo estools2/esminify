@@ -117,7 +117,8 @@ function minify(opt, callback) {
   }
 
   if (stats.isDirectory()) {
-    fs.walk(src, /\.js$/, function (err, file, done) {
+    var errs = [];
+    fs.walk(src, function (err, file, done) {
       if (err) {
         console.log(err.stack);
         return done();
@@ -127,10 +128,23 @@ function minify(opt, callback) {
         //console.log('exclude:', relfile);
         return done();
       }
-      execFile({
-        input: file,
-        output: path.join(dest, relfile)
-      }, userFormat, strictMod);
+      if (!/\.js$/.test(file)) {
+        console.log('copy file:', relfile);
+        fs.sync().save(path.join(dest, relfile), fs.readFileSync(file));
+        return done();
+      }
+      try {
+        execFile({
+          input: file,
+          output: path.join(dest, relfile)
+        });
+      } catch (e) {
+        console.log('=================');
+        console.log('error, file:', relfile, e.message);
+        e.file = relfile;
+        errs.push(e);
+        console.log('=================');
+      }
       done();
     }, function (err) {
       if (err) {
@@ -140,6 +154,13 @@ function minify(opt, callback) {
           console.log('compress file error', err.message);
         }
         return;
+      }
+      if (errs.length) {
+        console.log('====== Error files ========');
+        errs.forEach(function (err) {
+          console.log('file:', err.file, err.message);
+        });
+        console.log('===========================');
       }
       callback && callback();
     });
