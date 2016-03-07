@@ -4,6 +4,8 @@
 
 ```
 esminify -o dir.release srcdir
+
+exminify -o dir.release --cmd true srcdir
 ```
 
 help:

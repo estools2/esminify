@@ -18,6 +18,17 @@ function parseExclude(str) {
   return rules;
 }
 
+function parseCmd(str) {
+  var result = {};
+  if (!str) {
+    return undefined
+  }
+  if (str === 'true') {
+    return result;
+  }
+  result.globals = str.split(',');
+  return result;
+}
 function genRule(rule) {
   if (rule.indexOf('/') === 0) {
     rule = '^' + rule;
@@ -33,22 +44,21 @@ cmd
   .option('-o, --output [value]', 'set the output dir')
   .option('-c, --config [value]', 'config the minify format')
   .option('--no-strict', 'compress without strict mod')
+  .option('--cmd [value]', 'compress as cmd module')
   .parse(process.argv);
 
 var input = cmd.args[0];
 var args = cmd;
 var cwd = process.cwd();
 var path = require('path');
+var cmdConfig = parseCmd(args.cmd);
 
 var exclude = parseExclude(args.exclude);
-
 esminify.minify({
   input: path.join(cwd, input),
   output: args.output ? path.join(cwd, args.output) : null,
   exclude: exclude,
   forceOverrideExclude: args.forceOverrideExclude,
   strictMod: args.noStrict ? false : true,
-  cmd: {
-    globals: ['module', 'exports', 'require', '__dirname', '__filename']
-  }
+  cmd: cmdConfig
 });
