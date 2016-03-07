@@ -47,5 +47,8 @@ esminify.minify({
   output: args.output ? path.join(cwd, args.output) : null,
   exclude: exclude,
   forceOverrideExclude: args.forceOverrideExclude,
-  strictMod: args.noStrict ? false : true
+  strictMod: args.noStrict ? false : true,
+  cmd: {
+    globals: ['module', 'exports', 'require', '__dirname', '__filename']
+  }
 });

@@ -39,21 +39,6 @@ function checkRequiredOpt(opt) {
     throw new Error('missing dir in option.');
   }
 }
-
-function execFile(obj, format, strictMod) {
-  console.log('minify file:', obj.input.substr(cwd.length + 1), '>', obj.output.substr(cwd.length + 1));
-  var code = fs.readFileSync(obj.input).toString();
-  let ast = esprima.parse(code);
-  let optimized = esmangle.optimize(ast, null, {
-    inStrictCode: strictMod
-  });
-  let result = esmangle.mangle(optimized);
-  let output = escodegen.generate(result, {
-    format: format
-  });
-  fs.sync().save(obj.output, output);
-}
-
 /**
  * minify code
  * @param  {Object} opt
@@ -62,6 +47,8 @@ function execFile(obj, format, strictMod) {
  *         - exclude
  *         - format
  *         - strictMod
+ *         - cmd
+ *           - globals []
  */
 function minify(opt, callback) {
   checkRequiredOpt(opt);
@@ -100,6 +87,35 @@ function minify(opt, callback) {
     return flag;
   }
 
+  function execFile(obj) {
+    console.log('minify file:', obj.input.substr(cwd.length + 1), '>', obj.output.substr(cwd.length + 1));
+    var code = fs.readFileSync(obj.input).toString().trim();
+    var sheBang = false;
+    if (code.charCodeAt(0) === 65279) {
+      code = code.substr(1);
+    }
+    // cut the shebang
+    if (code.indexOf('#!') === 0) {
+      var firstLineEnd = code.indexOf('\n');
+      sheBang = code.substr(0, firstLineEnd + 1);
+      code = code.substr(firstLineEnd + 1);
+    }
+    let ast = esprima.parse(code);
+    let optimized = esmangle.optimize(ast, null, {
+      inStrictCode: strictMod
+    });
+    let result = esmangle.mangle(optimized, {
+      cmd: opt.cmd
+    });
+    let output = escodegen.generate(result, {
+      format: userFormat
+    });
+    if (sheBang) {
+      output = sheBang + output;
+    }
+    fs.sync().save(obj.output, output);
+  }
+
   if (stats.isDirectory()) {
     fs.walk(src, /\.js$/, function (err, file, done) {
       var relfile = file.substr(src.length);
@@ -126,7 +142,7 @@ function minify(opt, callback) {
   } else {
     execFile({
       input: opt.input,
-      output: opt.output
+      output: dest
     }, userFormat, strictMod);
   }
 }
