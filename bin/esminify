@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+'use strict';
 
 const esminify = require('../index');
 const cmd = require('commander');
@@ -36,6 +37,20 @@ function genRule(rule) {
   return new RegExp(rule.replace(/\./g, '\\.').replace(/\*/g, '.*'));
 }
 
+function absPath(p) {
+  var flag = false;
+  if (process.platform.indexOf('win') === 0) {
+    if (/^\w:/.test(p)) {
+      flag = true;
+    }
+  } else {
+    if (/^\//.test(p)) {
+      flag = true;
+    }
+  }
+  return flag;
+}
+
 cmd
   .usage('[options] $your_code_dir')
   .description('minify you js code')
@@ -47,8 +62,10 @@ cmd
   .option('--cmd [value]', 'compress as cmd module')
   .parse(process.argv);
 
-var input = cmd.args[0];
+
 var args = cmd;
+var input = cmd.args[0];
+var output = args.output;
 var cwd = process.cwd();
 var path = require('path');
 var cmdConfig = parseCmd(args.cmd);
@@ -58,9 +75,14 @@ if (!input) {
   cmd.help();
   process.exit(0);
 }
+
+if (!absPath(input)) {
+  input = path.join(cwd, input);
+  output = output ? path.join(cwd, output) : null;
+}
 esminify.minify({
-  input: path.join(cwd, input),
-  output: args.output ? path.join(cwd, args.output) : null,
+  input: input,
+  output: output,
   exclude: exclude,
   forceOverrideExclude: args.forceOverrideExclude,
   strictMod: args.noStrict ? false : true,

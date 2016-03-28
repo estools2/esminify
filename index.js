@@ -140,7 +140,7 @@ function minify(opt, callback) {
         });
       } catch (e) {
         console.log('=================');
-        console.log('error, file:', relfile, e.message);
+        console.log('error, file:', relfile, e.message, e.stack);
         e.file = relfile;
         errs.push(e);
         console.log('=================');
