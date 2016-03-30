@@ -42,8 +42,10 @@ function checkRequiredOpt(opt) {
 /**
  * minify code
  * @param  {Object} opt
- *         - input
- *         - output
+ *         - input {ABSPath}
+ *         - code {String}
+ *         - output {ABSPath}
+ *         - onFileProcess {Function}
  *         - exclude
  *         - format
  *         - strictMod
@@ -53,10 +55,19 @@ function checkRequiredOpt(opt) {
 function minify(opt, callback) {
   checkRequiredOpt(opt);
   let src = opt.input.replace(/(\/|\\)$/, '');
-  let dest = opt.output || src + '.min';
+  let dest = opt.output;
   let exclude = opt.exclude;
   let userFormat = opt.config || defaultFormat;
   let strictMod = opt.strictMod;
+  let onFileProcess = opt.onFileProcess;
+
+  if (!dest) {
+    if (/\.\w+$/.test(src)) {
+      dest = src.replace(/\.(\w+)$/, '.min.$1');
+    } else {
+      dest = src + '.min';
+    }
+  }
 
   if (!opt.forceOverrideExclude) {
     exclude = exclude.concat([
@@ -64,17 +75,6 @@ function minify(opt, callback) {
       /\.svn\//,
       /node_modules\//
     ]);
-  }
-  let stats;
-  try {
-    stats = fs.statSync(src);
-  } catch (e) {
-    if (callback) {
-      callback(new Error('input error' + e.message));
-    } else {
-      console.error('input error' + e.message);
-    }
-    return;
   }
 
   function checkExclude(file) {
@@ -88,9 +88,12 @@ function minify(opt, callback) {
   }
 
   function execFile(obj) {
-    console.log('minify file:', obj.input.substr(cwd.length + 1), '>', obj.output.substr(cwd.length + 1));
-    var code = fs.readFileSync(obj.input).toString().trim();
+    if (onFileProcess) {
+      onFileProcess(obj);
+    }
+    var code = obj.code || fs.readFileSync(obj.input).toString().trim();
     var sheBang = false;
+    // cut utf-8 bom header
     if (code.charCodeAt(0) === 65279) {
       code = code.substr(1);
     }
@@ -100,6 +103,7 @@ function minify(opt, callback) {
       sheBang = code.substr(0, firstLineEnd + 1);
       code = code.substr(firstLineEnd + 1);
     }
+
     let ast = esprima.parse(code);
     let optimized = esmangle.optimize(ast, null, {
       inStrictCode: strictMod
@@ -113,7 +117,31 @@ function minify(opt, callback) {
     if (sheBang) {
       output = sheBang + output;
     }
-    fs.sync().save(obj.output, output);
+
+    if (obj.output) {
+      fs.sync().save(obj.output, output);
+    } else {
+      return output;
+    }
+  }
+
+  if (opt.code) {
+    return execFile({
+      code: opt.code,
+      cmd: opt.cmd
+    });
+  }
+
+  let stats;
+  try {
+    stats = fs.statSync(src);
+  } catch (e) {
+    if (callback) {
+      callback(new Error('input error' + e.message));
+    } else {
+      console.error('input error' + e.message);
+    }
+    return;
   }
 
   if (stats.isDirectory()) {
@@ -136,7 +164,8 @@ function minify(opt, callback) {
       try {
         execFile({
           input: file,
-          output: path.join(dest, relfile)
+          output: path.join(dest, relfile),
+          cmd: opt.cmd
         });
       } catch (e) {
         console.log('=================');
@@ -167,8 +196,9 @@ function minify(opt, callback) {
   } else {
     execFile({
       input: opt.input,
-      output: dest
-    }, userFormat, strictMod);
+      output: dest,
+      cmd: opt.cmd
+    });
   }
 }
 

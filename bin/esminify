@@ -86,5 +86,8 @@ esminify.minify({
   exclude: exclude,
   forceOverrideExclude: args.forceOverrideExclude,
   strictMod: args.noStrict ? false : true,
-  cmd: cmdConfig
+  cmd: cmdConfig,
+  onFileProcess: function (obj) {
+    console.log('minify file:', obj.input.substr(cwd.length + 1), '>', obj.output.substr(cwd.length + 1));
+  }
 });
