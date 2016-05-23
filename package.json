@@ -1,6 +1,6 @@
 {
   "name": "esminify",
-  "version": "2.0.13",
+  "version": "2.0.14",
   "description": "The ECMAScript(javascript) minify tool",
   "main": "index.js",
   "scripts": {
@@ -30,5 +30,9 @@
     "esutils": "^2.0.2",
     "lodash": "~3.10.1",
     "xfs": "~0.2.1"
+  },
+  "devDependencies": {
+    "mocha": "^2.5.1",
+    "should": "^8.4.0"
   }
 }

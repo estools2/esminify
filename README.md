@@ -50,15 +50,19 @@ var minifyCode = esminify.minify({
 
   input code for minify
 
-* config {Object}
+* ast {AST Object}
 
-  config为混淆代码时的参数配置，默认配置如下。支持的所有option参见 escodegen的api (https://github.com/estools/escodegen/wiki/API)
+  input code ast for minify, this is an optmize for pipeline process. sometime code already parsed into ast, so it's no-need to parse ast again
+
+* format {Object}
+
+  format 为混淆代码时的参数配置，默认配置如下。支持的所有option参见 escodegen的api (https://github.com/estools/escodegen/wiki/API)
 ```
 const esminify = require('esminify');
 let option = {
   input: path.join(__dirname, './'),
   output: path.join(__dirname, 'out/release'),
-  config: {
+  format: {
     renumber: true,
     hexadecimal: true,
     escapeless: true,
@@ -68,6 +72,18 @@ let option = {
   }
 }
 esminify.minify(option);
+
 ```
 
 * onFileProcess {Function}
+
+```
+esminify.minify({
+  input: '/code_dir',
+  output: '/code_compressed_dir',
+  onFileProcess: function (info) {
+    // this function called when each file starting processing
+    // you can custom output message here
+  }
+});
+```

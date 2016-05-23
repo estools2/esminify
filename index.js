@@ -8,12 +8,10 @@
 'use strict';
 
 const fs = require('xfs');
-const _ = require('lodash');
 const path = require('path');
 const esprima = require('./lib/esprima');
 const esmangle = require('esmangle2');
 const escodegen = require('./lib/escodegen');
-const cwd = process.cwd();
 
 const defaultFormat = {
   renumber: true,
@@ -35,7 +33,7 @@ function checkRequiredOpt(opt) {
   if (typeof opt !== 'object') {
     throw new Error('option must be an object.');
   }
-  if (!opt.input) {
+  if (!opt.input && !opt.code && !opt.ast) {
     throw new Error('missing dir in option.');
   }
 }
@@ -44,20 +42,21 @@ function checkRequiredOpt(opt) {
  * @param  {Object} opt
  *         - input {ABSPath}
  *         - code {String}
+ *         - ast {Object}
  *         - output {ABSPath}
  *         - onFileProcess {Function}
- *         - exclude
- *         - format
- *         - strictMod
- *         - cmd
- *           - globals []
+ *         - exclude {String} exclude path
+ *         - format {Object} mangle config, see esmangle config
+ *         - config {Object} mangle config
+ *         - strictMod {Boolean} if strict model
+ *         - cmd {Boolean} if cmd module
  */
 function minify(opt, callback) {
   checkRequiredOpt(opt);
-  let src = opt.input.replace(/(\/|\\)$/, '');
+  let src = opt.input && opt.input.replace(/(\/|\\)$/, '');
   let dest = opt.output;
-  let exclude = opt.exclude;
-  let userFormat = opt.config || defaultFormat;
+  let exclude = opt.exclude || [];
+  let userFormat = opt.format || opt.config || defaultFormat;
   let strictMod = opt.strictMod;
   let onFileProcess = opt.onFileProcess;
 
@@ -91,20 +90,27 @@ function minify(opt, callback) {
     if (onFileProcess) {
       onFileProcess(obj);
     }
-    var code = obj.code || fs.readFileSync(obj.input).toString().trim();
+    var ast;
+    var code;
     var sheBang = false;
-    // cut utf-8 bom header
-    if (code.charCodeAt(0) === 65279) {
-      code = code.substr(1);
-    }
-    // cut the shebang
-    if (code.indexOf('#!') === 0) {
-      var firstLineEnd = code.indexOf('\n');
-      sheBang = code.substr(0, firstLineEnd + 1);
-      code = code.substr(firstLineEnd + 1);
+
+    if (obj.ast) {
+      ast = obj.ast;
+    } else {
+      code = obj.code || fs.readFileSync(obj.input).toString().trim();
+      // cut utf-8 bom header
+      if (code.charCodeAt(0) === 65279) {
+        code = code.substr(1);
+      }
+      // cut the shebang
+      if (code.indexOf('#!') === 0) {
+        let firstLineEnd = code.indexOf('\n');
+        sheBang = code.substr(0, firstLineEnd + 1);
+        code = code.substr(firstLineEnd + 1);
+      }
+      ast = esprima.parse(code);
     }
 
-    let ast = esprima.parse(code);
     let optimized = esmangle.optimize(ast, null, {
       inStrictCode: strictMod
     });
@@ -124,7 +130,12 @@ function minify(opt, callback) {
       return output;
     }
   }
-
+  if (opt.ast) {
+    return execFile({
+      ast: opt.ast,
+      cmd: opt.cmd
+    });
+  }
   if (opt.code) {
     return execFile({
       code: opt.code,
@@ -153,7 +164,7 @@ function minify(opt, callback) {
       }
       var relfile = file.substr(src.length);
       if (checkExclude(relfile)) {
-        //console.log('exclude:', relfile);
+        // console.log('exclude:', relfile);
         return done();
       }
       if (!/\.js$/.test(file)) {
