@@ -10,9 +10,9 @@
 const fs = require('xfs');
 const _ = require('lodash');
 const path = require('path');
-const esprima = require('esprima');
+const esprima = require('./lib/esprima');
 const esmangle = require('esmangle2');
-const escodegen = require('escodegen');
+const escodegen = require('./lib/escodegen');
 const cwd = process.cwd();
 
 const defaultFormat = {

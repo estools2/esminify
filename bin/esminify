@@ -19,10 +19,11 @@ function parseExclude(str) {
   return rules;
 }
 
+/*
 function parseCmd(str) {
   var result = {};
   if (!str) {
-    return undefined
+    return undefined;
   }
   if (str === 'true') {
     return result;
@@ -30,6 +31,8 @@ function parseCmd(str) {
   result.globals = str.split(',');
   return result;
 }
+*/
+
 function genRule(rule) {
   if (rule.indexOf('/') === 0) {
     rule = '^' + rule;
@@ -59,7 +62,7 @@ cmd
   .option('-o, --output [value]', 'set the output dir')
   .option('-c, --config [value]', 'config the minify format')
   .option('--no-strict', 'compress without strict mod')
-  .option('--cmd [value]', 'compress as cmd module')
+  .option('--cmd', 'compress as cmd module')
   .parse(process.argv);
 
 
@@ -68,7 +71,6 @@ var input = cmd.args[0];
 var output = args.output;
 var cwd = process.cwd();
 var path = require('path');
-var cmdConfig = parseCmd(args.cmd);
 var exclude = parseExclude(args.exclude);
 
 if (!input) {
@@ -85,8 +87,8 @@ esminify.minify({
   output: output,
   exclude: exclude,
   forceOverrideExclude: args.forceOverrideExclude,
-  strictMod: args.noStrict ? false : true,
-  cmd: cmdConfig,
+  strictMod: !args.noStrict,
+  cmd: args.cmd,
   onFileProcess: function (obj) {
     console.log('minify file:', obj.input.substr(cwd.length + 1), '>', obj.output.substr(cwd.length + 1));
   }

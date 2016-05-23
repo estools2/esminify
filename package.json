@@ -1,6 +1,6 @@
 {
   "name": "esminify",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "description": "The ECMAScript(javascript) minify tool",
   "main": "index.js",
   "scripts": {
@@ -25,9 +25,9 @@
   "homepage": "https://github.com/yuzhigang33/esminify#readme",
   "dependencies": {
     "commander": "~2.9.0",
-    "escodegen": "~1.8.0",
     "esmangle2": "~1.0.4",
-    "esprima": "~2.7.1",
+    "estraverse": "^4.2.0",
+    "esutils": "^2.0.2",
     "lodash": "~3.10.1",
     "xfs": "~0.2.1"
   }
