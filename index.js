@@ -221,3 +221,5 @@ exports.minify = minify;
 exports.parse = function (str, opt) {
   return esprima.parse(str, opt);
 };
+exports.esprima = esprima;
+
