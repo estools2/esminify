@@ -61,4 +61,11 @@ describe('minify', function () {
       code.should.eql('let a=[1,2]');
     });
   });
+
+  describe('parse ast', function () {
+    it('should work fine', function () {
+      let ast = testMod.parse('let a=[1,2]');
+      ast.type.should.eql('Program');
+    });
+  });
 });

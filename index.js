@@ -217,3 +217,7 @@ function minify(opt, callback) {
 exports.processFiles = minify;
 
 exports.minify = minify;
+
+exports.parse = function (str, opt) {
+  return esprima.parse(str, opt);
+};
