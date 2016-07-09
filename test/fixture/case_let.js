@@ -1,15 +1,18 @@
 /**
- * let 场景
+ * 测试let场景,
+ *   在不同的块级区域中定义的let, 不能产生冲突， 并且不能和上层变量冲突let
  */
 'use strict';
-const map = {};
-function test(serverName, pathname, cb) {
+
+var map = {
+  localhost: [1,2,3],
+  'test.com': [4]
+}
+function test(serverName, cb) {
   // router match
   let apps = map[serverName];
   if (apps) {
     for (let app of apps) {
-      // let app = apps[i];
-      // serverName and router match
       return cb(null, app);
     }
   }
@@ -21,5 +24,7 @@ function test(serverName, pathname, cb) {
       return cb(null, app);
     }
   }
-  cb(new Error('router not found'));
+  cb('empty');
 }
+
+module.exports = test;

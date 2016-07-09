@@ -130,6 +130,7 @@ function minify(opt, callback) {
       return output;
     }
   }
+
   if (opt.ast) {
     return execFile({
       ast: opt.ast,

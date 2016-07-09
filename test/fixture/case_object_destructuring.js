@@ -1,3 +1,6 @@
+/**
+ * 对象解构
+ */
 'use strict';
 
 let obj = {
@@ -7,4 +10,3 @@ let obj = {
 
 let {name, email} = obj;
 let {name: name1, email: email1} = obj;
-// console.log(name, email, name1, email1);

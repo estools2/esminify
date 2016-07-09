@@ -2,10 +2,34 @@
 
 const should = require('should');
 const testMod = require('../index');
+const fs = require('fs');
+const path = require('path');
+
+const fixtures = [];
+
+let files = fs.readdirSync(path.join(__dirname, './fixture'));
+
+
 describe('minify', function () {
 
   describe('fixture', function () {
-
+    files.forEach(function (f) {
+      if (/\.min\.js$/.test(f)) {
+        return;
+      }
+      it('should work fine: ' + f, function () {
+        let miniCode = testMod.minify({
+          code: fs.readFileSync(path.join(__dirname, './fixture/' + f)).toString(),
+          cmd: true,
+          strictMod: true
+        });
+        miniCode.should.eql(
+          fs.readFileSync(
+            path.join(__dirname, './fixture/' + f.replace(/\.js$/, '.min.js'))
+          ).toString()
+        );
+      });
+    });
   });
 
   describe('minify code', function () {
