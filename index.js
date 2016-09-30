@@ -48,7 +48,7 @@ function checkRequiredOpt(opt) {
  *         - exclude {String} exclude path
  *         - format {Object} mangle config, see esmangle config
  *         - config {Object} mangle config
- *         - strictMod {Boolean} if strict model
+ *         - strict {Boolean} if strict model
  *         - cmd {Boolean} if cmd module
  */
 function minify(opt, callback) {
@@ -57,7 +57,7 @@ function minify(opt, callback) {
   let dest = opt.output;
   let exclude = opt.exclude || [];
   let userFormat = opt.format || opt.config || defaultFormat;
-  let strictMod = opt.strictMod;
+  let strictMod = opt.strict !== undefined ? opt.strict : opt.strictMod;
   let onFileProcess = opt.onFileProcess;
 
   if (!dest) {
@@ -115,7 +115,8 @@ function minify(opt, callback) {
       inStrictCode: strictMod
     });
     let result = esmangle.mangle(optimized, {
-      cmd: opt.cmd
+      ecmaVersion: 6,
+      sourceType: opt.cmd ? 'module' : 'script'
     });
     let output = escodegen.generate(result, {
       format: userFormat

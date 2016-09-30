@@ -69,7 +69,9 @@ let option = {
     compact: true,
     semicolons: false,
     parentheses: false
-  }
+  },
+  cmd: true,
+  strict: true
 }
 esminify.minify(option);
 
