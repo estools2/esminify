@@ -25,7 +25,7 @@
   "homepage": "https://github.com/yuzhigang33/esminify#readme",
   "dependencies": {
     "commander": "~2.9.0",
-    "esmangle2": "~1.0.9",
+    "esmangle2": "~1.0.10",
     "estraverse": "^4.2.0",
     "esutils": "^2.0.2",
     "lodash": "~3.10.1",
