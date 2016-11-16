@@ -159,16 +159,19 @@ function minify(opt, callback) {
 
   if (stats.isDirectory()) {
     var errs = [];
-    fs.walk(src, function (err, file, done) {
+    fs.walk(src, function (file) {
+      var relfile = file.substr(src.length);
+      if (checkExclude(relfile)) {
+        // console.log('exclude:', relfile);
+        return false;
+      }
+      return true;
+    }, function (err, file, done) {
       if (err) {
         console.log(err.stack);
         return done();
       }
       var relfile = file.substr(src.length);
-      if (checkExclude(relfile)) {
-        // console.log('exclude:', relfile);
-        return done();
-      }
       if (!/\.js$/.test(file)) {
         console.log('copy file:', relfile);
         fs.sync().save(path.join(dest, relfile), fs.readFileSync(file));
@@ -224,4 +227,3 @@ exports.parse = function (str, opt) {
   return esprima.parse(str, opt);
 };
 exports.esprima = esprima;
-
