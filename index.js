@@ -9,17 +9,42 @@
 
 const fs = require('xfs');
 const path = require('path');
-const esprima = require('./lib/esprima');
-const esmangle = require('esmangle2');
-const escodegen = require('./lib/escodegen');
+const babel = require('babel-core');
 
-const defaultFormat = {
-  renumber: true,
-  hexadecimal: true,
-  escapeless: true,
-  compact: true,
-  semicolons: false,
-  parentheses: false
+const babelOptions = {
+  comments: false,
+  ast: false,
+  presets: [
+    [
+      'babili',
+      /** referer: https://github.com/babel/babili/tree/master/packages/babel-preset-babili#options */
+      {
+        evaluate: true, // - babel-plugin-minify-constant-folding
+        deadcode: true, // - babel-plugin-minify-dead-code-elimination
+        infinity: true, // - babel-plugin-minify-infinity
+        mangle: {
+          keepFnName: false,
+          topLevel: true,
+          eval: true,
+          keepClassName: false,
+          blacklist: []
+        }, // - babel-plugin-minify-mangle-names
+        numericLiterals: true, // - babel-plugin-minify-numeric-literals
+        replace: true, // babel-plugin-minify-replace
+        simplify: true, // - babel-plugin-minify-simplify
+        mergeVars: true, // - babel-plugin-transform-merge-sibling-variables
+        booleans: true, // - babel-plugin-transform-minify-booleans
+        regexpConstructors: true, // - babel-plugin-transform-regexp-constructors
+        removeConsole: false, // - (Default: false) - babel-plugin-transform-remove-console
+        removeDebugger: true, // - (Default: false) - babel-plugin-transform-remove-debugger
+        removeUndefined: true, // - babel-plugin-transform-remove-undefined
+        undefinedToVoid: true, // - babel-plugin-transform-undefined-to-void
+        // groups
+        properties: true,
+        unsafe: false
+      }
+    ]
+  ]
 };
 
 function checkRequiredOpt(opt) {
@@ -46,7 +71,6 @@ function checkRequiredOpt(opt) {
  *         - output {ABSPath}
  *         - onFileProcess {Function}
  *         - exclude {String} exclude path
- *         - format {Object} mangle config, see esmangle config
  *         - config {Object} mangle config
  *         - strict {Boolean} if strict model
  *         - cmd {Boolean} if cmd module
@@ -56,8 +80,6 @@ function minify(opt, callback) {
   let src = opt.input && opt.input.replace(/(\/|\\)$/, '');
   let dest = opt.output;
   let exclude = opt.exclude || [];
-  let userFormat = opt.format || opt.config || defaultFormat;
-  let strictMod = opt.strict !== undefined ? opt.strict : opt.strictMod;
   let onFileProcess = opt.onFileProcess;
 
   if (!dest) {
@@ -85,17 +107,21 @@ function minify(opt, callback) {
     });
     return flag;
   }
-
+  /**
+   * minify code
+   * @param  {Object} obj
+   *         - ast ast input
+   *         - code  souce code
+   *         - input input file
+   */
   function execFile(obj) {
     if (onFileProcess) {
       onFileProcess(obj);
     }
-    var ast;
     var code;
     var sheBang = false;
-
     if (obj.ast) {
-      ast = obj.ast;
+      code = babel.transformFromAst(obj.ast, babelOptions).code;
     } else {
       code = obj.code || fs.readFileSync(obj.input).toString().trim();
       // cut utf-8 bom header
@@ -108,27 +134,17 @@ function minify(opt, callback) {
         sheBang = code.substr(0, firstLineEnd + 1);
         code = code.substr(firstLineEnd + 1);
       }
-      ast = esprima.parse(code);
+      code = babel.transform(code, babelOptions).code;
+      console.log('>>>>', code);
     }
-
-    let optimized = esmangle.optimize(ast, null, {
-      inStrictCode: strictMod
-    });
-    let result = esmangle.mangle(optimized, {
-      ecmaVersion: 6,
-      sourceType: opt.cmd ? 'module' : 'script'
-    });
-    let output = escodegen.generate(result, {
-      format: userFormat
-    });
     if (sheBang) {
-      output = sheBang + output;
+      code = sheBang + code;
     }
 
     if (obj.output) {
-      fs.sync().save(obj.output, output);
+      fs.sync().save(obj.output, code);
     } else {
-      return output;
+      return code;
     }
   }
 
@@ -152,7 +168,7 @@ function minify(opt, callback) {
     if (callback) {
       callback(new Error('input error' + e.message));
     } else {
-      console.error('input error' + e.message);
+      console.error('input error' + e.message); // eslint-disable-line
     }
     return;
   }
@@ -161,7 +177,7 @@ function minify(opt, callback) {
     var errs = [];
     fs.walk(src, function (err, file, done) {
       if (err) {
-        console.log(err.stack);
+        console.log(err.stack); // eslint-disable-line
         return done();
       }
       var relfile = file.substr(src.length);
@@ -170,7 +186,7 @@ function minify(opt, callback) {
         return done();
       }
       if (!/\.js$/.test(file)) {
-        console.log('copy file:', relfile);
+        console.log('copy file:', relfile); // eslint-disable-line
         fs.sync().save(path.join(dest, relfile), fs.readFileSync(file));
         return done();
       }
@@ -181,11 +197,11 @@ function minify(opt, callback) {
           cmd: opt.cmd
         });
       } catch (e) {
-        console.log('=================');
-        console.log('error, file:', relfile, e.message, e.stack);
+        console.log('================='); // eslint-disable-line
+        console.log('error, file:', relfile, e.message, e.stack); // eslint-disable-line
         e.file = relfile;
         errs.push(e);
-        console.log('=================');
+        console.log('================='); // eslint-disable-line
       }
       done();
     }, function (err) {
@@ -193,16 +209,16 @@ function minify(opt, callback) {
         if (callback) {
           callback(err);
         } else {
-          console.log('compress file error', err.message);
+          console.log('compress file error', err.message); // eslint-disable-line
         }
         return;
       }
       if (errs.length) {
-        console.log('====== Error files ========');
+        console.log('====== Error files ========'); // eslint-disable-line
         errs.forEach(function (err) {
-          console.log('file:', err.file, err.message);
+          console.log('file:', err.file, err.message); // eslint-disable-line
         });
-        console.log('===========================');
+        console.log('==========================='); // eslint-disable-line
       }
       callback && callback();
     });
@@ -220,8 +236,6 @@ exports.processFiles = minify;
 
 exports.minify = minify;
 
-exports.parse = function (str, opt) {
-  return esprima.parse(str, opt);
+exports.parse = function (str) {
+  throw new Error('esminify.parse() is removed');
 };
-exports.esprima = esprima;
-
