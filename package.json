@@ -1,6 +1,6 @@
 {
   "name": "esminify",
-  "version": "2.1.0",
+  "version": "3.0.0-beta.1",
   "description": "The ECMAScript(javascript) minify tool",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yuzhigang33/esminify.git"
+    "url": "git+https://github.com/estools2/esminify.git"
   },
   "keywords": [
     "es6",
@@ -17,19 +17,22 @@
   "bin": {
     "esminify": "bin/esminify"
   },
-  "author": "yuzhigang33",
+  "maintainers": [
+    "yuzhigang33",
+    "fishbar <zhengxinlin@gmail.com>"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yuzhigang33/esminify/issues"
+    "url": "https://github.com/estools2/esminify/issues"
   },
-  "homepage": "https://github.com/yuzhigang33/esminify#readme",
+  "homepage": "https://github.com/estools2/esminify#readme",
   "dependencies": {
-    "commander": "~2.9.0",
-    "esmangle2": "~1.0.11",
-    "estraverse": "^4.2.0",
-    "esutils": "^2.0.2",
-    "lodash": "~3.10.1",
-    "xfs": "~0.2.1"
+    "babel-core": "^6.24.1",
+    "babel-preset-babili": "^0.1.2",
+    "commander": "2.9.0",
+    "litelog": "^2.0.8",
+    "lodash": "3.10.1",
+    "xfs": "0.2.1"
   },
   "devDependencies": {
     "mocha": "^2.5.1",

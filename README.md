@@ -16,12 +16,11 @@ esminify
 ```
 
 
-
 ## Programable API
 
-take look at this example
 
-### `esminify.processFiles(options)`
+* process hole dir
+
 ```
 // 输出到文件
 const esminify = require('esminify');
@@ -29,14 +28,17 @@ esminify.minify({
   input: path.join(__dirname, 'your_source_dir'),
   output: path.join(__dirname, 'your_dest_dir')
 });
+```
 
-// 返回压缩代码
+* process custom code
 
+```
 var minifyCode = esminify.minify({
   code: 'your code here'
 })
 ```
-`options` contains:
+
+## `options` contains:
 
 * input {Absolute Path}
 
@@ -54,30 +56,17 @@ var minifyCode = esminify.minify({
 
   input code ast for minify, this is an optmize for pipeline process. sometime code already parsed into ast, so it's no-need to parse ast again
 
-* format {Object}
+* config {Object}
 
-  format 为混淆代码时的参数配置，默认配置如下。支持的所有option参见 escodegen的api (https://github.com/estools/escodegen/wiki/API)
-```
-const esminify = require('esminify');
-let option = {
-  input: path.join(__dirname, './'),
-  output: path.join(__dirname, 'out/release'),
-  format: {
-    renumber: true,
-    hexadecimal: true,
-    escapeless: true,
-    compact: true,
-    semicolons: false,
-    parentheses: false
-  },
-  cmd: true,
-  strict: true
-}
-esminify.minify(option);
+  format 为混淆代码时的参数配置，默认配置如下。支持的所有option参见babili
 
-```
+* exclude {Array{RegExp}}
 
-* onFileProcess {Function}
+  exclude列表，每条规则为一个正则，TODO: 支持gitignore风格的字符串描述
+
+* onFileProcess(obj) {Function}
+
+  当每个文件被压缩之前，会调用这个方法，如果该方法返回`false`则取消压缩
 
 ```
 esminify.minify({

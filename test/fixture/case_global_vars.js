@@ -5,9 +5,9 @@
  *  模块变量名压缩
  */
 var Table = function () {};
-Table.name = 'test';
+// Table.name = 'test';
 
-function Chair() {}
-Chair.prototype.name = 'chair';
+function Car() {}
+Car.prototype.name = 'abc';
 
-module.exports = Chair;
+module.exports = Car;

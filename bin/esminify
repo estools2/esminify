@@ -14,11 +14,22 @@ function parseExclude(str) {
     if (!rule) {
       return;
     }
-    rules.push(genRule(rule));
+    rules.push(rule);
   });
   return rules;
 }
 
+cmd.on('--help', function () {
+  console.log('  Example:'); // eslint-disable-line
+  console.log(''); // eslint-disable-line
+  console.log('    > esminify single.js -o single.min.js'); // eslint-disable-line
+  console.log('    > esminify appdir/ -o targetdir/'); // eslint-disable-line
+  console.log(''); // eslint-disable-line
+  console.log('  Specific:'); // eslint-disable-line
+  console.log(''); // eslint-disable-line
+  console.log('    * default exclude rules: .git/,.svn/,node_modules/'); // eslint-disable-line
+  console.log(''); // eslint-disable-line
+});
 /*
 function parseCmd(str) {
   var result = {};
@@ -32,13 +43,6 @@ function parseCmd(str) {
   return result;
 }
 */
-
-function genRule(rule) {
-  if (rule.indexOf('/') === 0) {
-    rule = '^' + rule;
-  }
-  return new RegExp(rule.replace(/\./g, '\\.').replace(/\*/g, '.*'));
-}
 
 function absPath(p) {
   var flag = false;
@@ -58,11 +62,10 @@ cmd
   .usage('[options] $your_code_dir')
   .description('minify you js code')
   .option('-x, --exclude [value]', 'exclude dirs')
-  .option('--force-override-exclude', 'force override the default exclude rules')
+  .option('--override-exclude', 'force override the default exclude rules')
   .option('-o, --output [value]', 'set the output dir')
   .option('-c, --config [value]', 'config the minify format')
-  .option('--no-strict', 'compress without strict mod')
-  .option('--cmd', 'compress as cmd module')
+  .option('--keep-top-level', 'if keep toplevel vars, default is false')
   .parse(process.argv);
 
 
@@ -80,16 +83,36 @@ if (!input) {
 
 if (!absPath(input)) {
   input = path.join(cwd, input);
-  output = output ? path.join(cwd, output) : null;
 }
+
+if (!output) {
+  if (/\.\w+$/.test(output)) {
+    output = input.replace(/\.(\w+)$/, '.min.$1');
+  } else {
+    output = input.replace(/\\|\/$/g, '') + '.min';
+  }
+}
+
+if (!absPath(output)) {
+  output = path.join(cwd, output);
+}
+
 esminify.minify({
   input: input,
   output: output,
   exclude: exclude,
-  forceOverrideExclude: args.forceOverrideExclude,
-  strictMod: !args.noStrict,
+  overrideExclude: args.overrideExclude,
+  keepTopLevel: args.keepTopLevel,
   cmd: args.cmd,
   onFileProcess: function (obj) {
-    console.log('minify file:', obj.input.substr(cwd.length + 1), '>', obj.output.substr(cwd.length + 1));
+    console.log('minify file:', obj.input.substr(cwd.length + 1), '>', obj.output.substr(cwd.length + 1)); // eslint-disable-line
+  }
+}, function (err, code) {
+  if (err) {
+    console.log('minify failed', err); // eslint-disable-line
+    process.exit(1);
+  } else {
+    console.log('minify success'); // eslint-disable-line
+    process.exit(0);
   }
 });

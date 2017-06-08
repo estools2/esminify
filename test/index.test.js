@@ -23,6 +23,7 @@ describe('minify', function () {
           cmd: true,
           strictMod: true
         });
+        eval(miniCode);
         miniCode.should.eql(
           fs.readFileSync(
             path.join(__dirname, './fixture/' + f.replace(/\.js$/, '.min.js'))
@@ -38,58 +39,63 @@ describe('minify', function () {
         code: 'let test = [1, 2];',
         cmd: true
       });
-      code.should.eql('let a=[1,2]');
+      code.should.eql('let a=[1,2];');
     });
   });
 
   describe('minify ast', function () {
     it('should work fine', function () {
       let ast = {
-        type: 'Program',
-        body: [
-          {
-            type: 'VariableDeclaration',
-            declarations: [
-              {
-                type: 'VariableDeclarator',
-                id: {
-                    type: 'Identifier',
-                    name: 'test'
-                },
-                init: {
-                  type: 'ArrayExpression',
-                  elements: [
-                    {
-                      type: 'Literal',
-                      value: 1,
-                      raw: '1'
-                    },
-                    {
-                      type: 'Literal',
-                      value: 2,
-                      raw: '2'
-                    }
-                  ]
+        type: 'File',
+        tokens: [],
+        comments: [],
+        program: {
+          type: 'Program',
+          body: [
+            {
+              type: 'VariableDeclaration',
+              declarations: [
+                {
+                  type: 'VariableDeclarator',
+                  id: {
+                      type: 'Identifier',
+                      name: 'test'
+                  },
+                  init: {
+                    type: 'ArrayExpression',
+                    elements: [
+                      {
+                        type: 'NumericLiteral',
+                        value: 1,
+                        raw: '1'
+                      },
+                      {
+                        type: 'NumericLiteral',
+                        value: 2,
+                        raw: '2'
+                      }
+                    ]
+                  }
                 }
-              }
-            ],
-            kind: 'let'
-          }
-        ],
-        sourceType: 'script'
+              ],
+              kind: 'let'
+            }
+          ],
+          sourceType: 'module'
+        }
       }
       let code = testMod.minify({
         ast: ast,
         cmd: true
       });
-      code.should.eql('let a=[1,2]');
+      code.should.eql('let a=[1,2];');
     });
   });
 
   describe('parse ast', function () {
     it('should work fine', function () {
       let ast = testMod.parse('let a=[1,2]');
-      ast.type.should.eql('Program');
+      ast.program.type.should.eql('Program');
     });
   });
 });

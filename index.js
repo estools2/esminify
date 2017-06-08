@@ -8,18 +8,21 @@
 'use strict';
 
 const fs = require('xfs');
+const litelog = require('litelog');
+const _ = require('lodash');
 const path = require('path');
-const esprima = require('./lib/esprima');
-const esmangle = require('esmangle2');
-const escodegen = require('./lib/escodegen');
+const babel = require('babel-core');
+const babili = require('babel-preset-babili');
 
-const defaultFormat = {
-  renumber: true,
-  hexadecimal: true,
-  escapeless: true,
-  compact: true,
-  semicolons: false,
-  parentheses: false
+const defaultConfig = {
+  removeDebugger: true,
+  mangle: {
+    blacklist: {},
+    eval: true,
+    keepFnName: false,
+    topLevel: true,
+    keepClassName: false
+  }
 };
 
 function checkRequiredOpt(opt) {
@@ -37,18 +40,73 @@ function checkRequiredOpt(opt) {
     throw new Error('missing dir in option.');
   }
 }
+
+function transform(opt) {
+  opt = opt || {};
+  if (opt.onFileProcess) {
+    let pres = opt.onFileProcess(opt);
+    if (pres === false) {
+      return;
+    }
+  }
+  var code;
+  var res;
+  var sheBang = false;
+
+  var option = {
+    // minified: true,
+    presets: [
+      [
+        babili,
+        opt.config
+      ]
+    ]
+  };
+
+  if (opt.ast) {
+    res = babel.transformFromAst(opt.ast, '', option);
+  } else {
+    code = opt.code || fs.readFileSync(opt.input).toString().trim();
+    // cut utf-8 bom header
+    if (code.charCodeAt(0) === 65279) {
+      code = code.substr(1);
+    }
+    // cut the shebang
+    if (code.indexOf('#!') === 0) {
+      let firstLineEnd = code.indexOf('\n');
+      sheBang = code.substr(0, firstLineEnd + 1);
+      code = code.substr(firstLineEnd + 1);
+    }
+    res = babel.transform(code, option);
+  }
+
+  if (sheBang) {
+    res.code = sheBang + res.code;
+  }
+
+  if (opt.output) {
+    fs.sync().save(opt.output, res.code);
+  } else {
+    return res.code;
+  }
+}
+function genRule(rule) {
+  if (rule.indexOf('/') === 0) {
+    rule = '^' + rule;
+  }
+  return new RegExp(rule.replace(/\./g, '\\.').replace(/\*/g, '.*'));
+}
 /**
  * minify code
  * @param  {Object} opt
- *         - input {ABSPath}
- *         - code {String}
+ *         - input {ABSPath}  filepath as input
+ *         - output {ABSPath} filepath as output
+ *         - code {String}  js code as iinput
  *         - ast {Object}
- *         - output {ABSPath}
  *         - onFileProcess {Function}
- *         - exclude {String} exclude path
- *         - format {Object} mangle config, see esmangle config
- *         - config {Object} mangle config
- *         - strict {Boolean} if strict model
+ *         - exclude {Array} exclude paths
+ *         - overrideExclude {Boolean}
+ *         - config {Object} mangle config, see babili
  *         - cmd {Boolean} if cmd module
  */
 function minify(opt, callback) {
@@ -56,9 +114,24 @@ function minify(opt, callback) {
   let src = opt.input && opt.input.replace(/(\/|\\)$/, '');
   let dest = opt.output;
   let exclude = opt.exclude || [];
-  let userFormat = opt.format || opt.config || defaultFormat;
-  let strictMod = opt.strict !== undefined ? opt.strict : opt.strictMod;
-  let onFileProcess = opt.onFileProcess;
+
+  let log = opt.log || litelog.create({
+    minify: {
+      level: 'INFO'
+    }
+  }).get('minify');
+
+  exclude.forEach((v, i, a)=> {
+    if (typeof v === 'string') {
+      a[i] = genRule(v);
+    }
+  });
+
+  opt.config = _.merge({}, defaultConfig, opt.config);
+
+  if (opt.keepTopLevel) {
+    opt.config.mangle.topLevel = false;
+  }
 
   if (!dest) {
     if (/\.\w+$/.test(src)) {
@@ -68,7 +141,7 @@ function minify(opt, callback) {
     }
   }
 
-  if (!opt.forceOverrideExclude) {
+  if (!opt.overrideExclude) {
     exclude = exclude.concat([
       /\.git\//,
       /\.svn\//,
@@ -86,63 +159,8 @@ function minify(opt, callback) {
     return flag;
   }
 
-  function execFile(obj) {
-    if (onFileProcess) {
-      onFileProcess(obj);
-    }
-    var ast;
-    var code;
-    var sheBang = false;
-
-    if (obj.ast) {
-      ast = obj.ast;
-    } else {
-      code = obj.code || fs.readFileSync(obj.input).toString().trim();
-      // cut utf-8 bom header
-      if (code.charCodeAt(0) === 65279) {
-        code = code.substr(1);
-      }
-      // cut the shebang
-      if (code.indexOf('#!') === 0) {
-        let firstLineEnd = code.indexOf('\n');
-        sheBang = code.substr(0, firstLineEnd + 1);
-        code = code.substr(firstLineEnd + 1);
-      }
-      ast = esprima.parse(code);
-    }
-
-    let optimized = esmangle.optimize(ast, null, {
-      inStrictCode: strictMod
-    });
-    let result = esmangle.mangle(optimized, {
-      ecmaVersion: 6,
-      sourceType: opt.cmd ? 'module' : 'script'
-    });
-    let output = escodegen.generate(result, {
-      format: userFormat
-    });
-    if (sheBang) {
-      output = sheBang + output;
-    }
-
-    if (obj.output) {
-      fs.sync().save(obj.output, output);
-    } else {
-      return output;
-    }
-  }
-
-  if (opt.ast) {
-    return execFile({
-      ast: opt.ast,
-      cmd: opt.cmd
-    });
-  }
-  if (opt.code) {
-    return execFile({
-      code: opt.code,
-      cmd: opt.cmd
-    });
+  if (opt.ast || opt.code) {
+    return transform(opt);
   }
 
   let stats;
@@ -152,7 +170,7 @@ function minify(opt, callback) {
     if (callback) {
       callback(new Error('input error' + e.message));
     } else {
-      console.error('input error' + e.message);
+      log.error('input error' + e.message);
     }
     return;
   }
@@ -168,27 +186,24 @@ function minify(opt, callback) {
       return true;
     }, function (err, file, done) {
       if (err) {
-        console.log(err.stack);
+        log.error(err.stack);
         return done();
       }
       var relfile = file.substr(src.length);
       if (!/\.js$/.test(file)) {
-        console.log('copy file:', relfile);
+        log.info('copy file:', relfile);
         fs.sync().save(path.join(dest, relfile), fs.readFileSync(file));
         return done();
       }
       try {
-        execFile({
+        transform(_.merge({}, opt, {
           input: file,
           output: path.join(dest, relfile),
-          cmd: opt.cmd
-        });
+        }));
       } catch (e) {
-        console.log('=================');
-        console.log('error, file:', relfile, e.message, e.stack);
+        log.error('error, file:', relfile, e.message, e.stack);
         e.file = relfile;
         errs.push(e);
-        console.log('=================');
       }
       done();
     }, function (err) {
@@ -196,25 +211,28 @@ function minify(opt, callback) {
         if (callback) {
           callback(err);
         } else {
-          console.log('compress file error', err.message);
+          log.error('compress file error', err.message);
         }
         return;
       }
       if (errs.length) {
-        console.log('====== Error files ========');
+        log.error('====== Error files ========');
         errs.forEach(function (err) {
-          console.log('file:', err.file, err.message);
+          log.error('file:', err.file, err.message);
         });
-        console.log('===========================');
+        log.error('===========================');
       }
-      callback && callback();
+      callback && callback(errs.length ? errs : null);
     });
   } else {
-    execFile({
-      input: opt.input,
-      output: dest,
-      cmd: opt.cmd
-    });
+    let code;
+    let err = null;
+    try {
+      code = transform(opt);
+    } catch (e) {
+      err = e;
+    }
+    callback && callback(err, code);
   }
 }
 
@@ -223,7 +241,12 @@ exports.processFiles = minify;
 
 exports.minify = minify;
 
+/**
+ * parse code into ast
+ */
 exports.parse = function (str, opt) {
-  return esprima.parse(str, opt);
+  return babel.transform(str, {
+    ast: true,
+    code: false
+  }).ast;
 };
-exports.esprima = esprima;
