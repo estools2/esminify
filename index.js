@@ -22,7 +22,8 @@ const defaultConfig = {
     keepFnName: false,
     topLevel: true,
     keepClassName: false
-  }
+  },
+  simplifyComparisons: false
 };
 
 function checkRequiredOpt(opt) {
@@ -107,7 +108,6 @@ function genRule(rule) {
  *         - exclude {Array} exclude paths
  *         - overrideExclude {Boolean}
  *         - config {Object} mangle config, see babili
- *         - cmd {Boolean} if cmd module
  */
 function minify(opt, callback) {
   checkRequiredOpt(opt);
