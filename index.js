@@ -12,7 +12,7 @@ const litelog = require('litelog');
 const _ = require('lodash');
 const path = require('path');
 const babel = require('babel-core');
-const babili = require('babel-preset-babili');
+const babili = require('babel-preset-minify');
 
 const defaultConfig = {
   removeDebugger: true,
