@@ -1,5 +1,8 @@
 # esminify
 
+[![snyk status](https://snyk.io/test/github/estools2/esminify/badge.svg?style=flat-square)](https://snyk.io/test/github/estools2/esminify)
+[![dependencies status](https://david-dm.org/estools2/esminify/status.svg)](https://david-dm.org/estools2/esminify)
+
 ## CLI usage
 
 ```
