@@ -27,10 +27,10 @@
   },
   "homepage": "https://github.com/estools2/esminify#readme",
   "dependencies": {
-    "babel-core": "^6.26.0",
-    "babel-preset-minify": "0.3.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-minify": "0.5.0",
     "commander": "2.10.0",
-    "litelog": "^2.0.8",
+    "litelog": "^3.0.6",
     "lodash": "4.17.11",
     "xfs": "0.2.3"
   },

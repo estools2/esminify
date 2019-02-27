@@ -61,7 +61,8 @@ function transform(opt) {
         babili,
         opt.config
       ]
-    ]
+    ],
+    comments: false
   };
 
   if (opt.ast) {
