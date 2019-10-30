@@ -31,7 +31,7 @@
     "babel-preset-minify": "0.3.0",
     "commander": "2.10.0",
     "litelog": "^2.0.8",
-    "lodash": "4.17.11",
+    "lodash": "4.17.15",
     "xfs": "0.2.3"
   },
   "devDependencies": {
