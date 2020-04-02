@@ -11,8 +11,8 @@ const fs = require('xfs');
 const litelog = require('litelog');
 const _ = require('lodash');
 const path = require('path');
-const babel = require('babel-core');
-const babili = require('babel-preset-minify');
+const babel = require('@babel/core');
+const babelMinify = require('babel-preset-minify');
 
 const defaultConfig = {
   removeDebugger: true,
@@ -23,7 +23,7 @@ const defaultConfig = {
     topLevel: true,
     keepClassName: false
   },
-  simplifyComparisons: false
+  // simplifyComparisons: false
 };
 
 function checkRequiredOpt(opt) {
@@ -58,11 +58,16 @@ function transform(opt) {
     // minified: true,
     presets: [
       [
-        babili,
+        babelMinify,
         opt.config
       ]
     ],
-    comments: false
+    comments: false,
+    generatorOpts: {
+      jsescOption: {
+        quotes: 'single'
+      }
+    }
   };
 
   if (opt.ast) {
