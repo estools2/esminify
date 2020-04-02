@@ -71,7 +71,7 @@ function transform(opt) {
   };
 
   if (opt.ast) {
-    res = babel.transformFromAst(opt.ast, '', option);
+    res = babel.transformFromAstSync(opt.ast, '', option);
   } else {
     code = opt.code || fs.readFileSync(opt.input).toString().trim();
     // cut utf-8 bom header
@@ -84,7 +84,7 @@ function transform(opt) {
       sheBang = code.substr(0, firstLineEnd + 1);
       code = code.substr(firstLineEnd + 1);
     }
-    res = babel.transform(code, option);
+    res = babel.transformSync(code, option);
   }
 
   if (sheBang) {
@@ -251,7 +251,7 @@ exports.minify = minify;
  * parse code into ast
  */
 exports.parse = function (str, opt) {
-  return babel.transform(str, {
+  return babel.transformSync(str, {
     ast: true,
     code: false
   }).ast;
