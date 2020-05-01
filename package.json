@@ -4,7 +4,9 @@
   "description": "The ECMAScript(javascript) minify tool",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "npm test",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -33,10 +35,12 @@
     "commander": "2.10.0",
     "litelog": "^3.0.6",
     "lodash": "4.17.11",
-    "xfs": "0.2.3"
+    "xfs": "0.2.3",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "mocha": "^3.5.3",
     "should": "^8.4.0"
-  }
+  },
+  "snyk": true
 }
