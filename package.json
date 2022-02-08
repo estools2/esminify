@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/estools2/esminify#readme",
   "dependencies": {
-    "@babel/core": "^7.17.0",
+    "@babel/core": "7.17.0",
     "babel-preset-minify": "0.5.1",
     "commander": "2.10.0",
     "litelog": "^3.0.6",

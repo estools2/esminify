@@ -70,21 +70,28 @@ function transform(opt) {
     }
   };
 
-  if (opt.ast) {
-    res = babel.transformFromAstSync(opt.ast, '', option);
-  } else {
-    code = opt.code || fs.readFileSync(opt.input).toString().trim();
-    // cut utf-8 bom header
-    if (code.charCodeAt(0) === 65279) {
-      code = code.substr(1);
+  try {
+    if (opt.ast) {
+      res = babel.transformFromAstSync(opt.ast, '', option);
+    } else {
+      code = opt.code || fs.readFileSync(opt.input).toString().trim();
+      // cut utf-8 bom header
+      if (code.charCodeAt(0) === 65279) {
+        code = code.substr(1);
+      }
+      // cut the shebang
+      if (code.indexOf('#!') === 0) {
+        let firstLineEnd = code.indexOf('\n');
+        sheBang = code.substr(0, firstLineEnd + 1);
+        code = code.substr(firstLineEnd + 1);
+      }
+      res = babel.transformSync(code, option);
     }
-    // cut the shebang
-    if (code.indexOf('#!') === 0) {
-      let firstLineEnd = code.indexOf('\n');
-      sheBang = code.substr(0, firstLineEnd + 1);
-      code = code.substr(firstLineEnd + 1);
+  } catch (e) {
+    if (e.code === 'BABEL_PARSE_ERROR' || e.code === 'BABEL_TRANSFORM_ERROR') {
+      console.log('[minify error] file:', opt.input, e.message, 'skip minify this file');
+      res.code = code;
     }
-    res = babel.transformSync(code, option);
   }
 
   if (sheBang) {
@@ -97,6 +104,7 @@ function transform(opt) {
     return res.code;
   }
 }
+
 function genRule(rule) {
   if (rule.indexOf('/') === 0) {
     rule = '^' + rule;
