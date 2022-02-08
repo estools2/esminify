@@ -41,6 +41,18 @@ describe('minify', function () {
       });
       code.should.eql('let a=[1,2];');
     });
+    it('should work fine without deadcode', function () {
+      let code = testMod.minify({
+        code: 'function abc(param, name) {return arguments.length}',
+        cmd: true,
+        config: {
+          deadcode: {
+            keepFnArgs: true
+          }
+        }
+      });
+      code.should.eql('function a(a,b){return arguments.length}');
+    });
   });
 
   describe('minify ast', function () {
