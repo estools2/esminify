@@ -1,6 +1,6 @@
 {
   "name": "esminify",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "The ECMAScript(javascript) minify tool",
   "main": "index.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "babel-preset-minify": "0.5.1",
     "commander": "2.10.0",
     "litelog": "^3.0.6",
-    "lodash": "4.17.11",
+    "lodash": "4.17.21",
     "xfs": "0.2.3"
   },
   "devDependencies": {
