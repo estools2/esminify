@@ -197,6 +197,15 @@ function minify(opt, callback) {
       }
       var relfile = file.substr(src.length);
       if (!/\.js$/.test(file)) {
+        if (opt.onFileProcess) {
+          let res = opt.onFileProcess({
+            input: file,
+            output: path.join(dest, relfile)
+          });
+          if (res === false) {
+            return done();
+          }
+        }
         log.info('copy file:', relfile);
         fs.sync().save(path.join(dest, relfile), fs.readFileSync(file));
         return done();
