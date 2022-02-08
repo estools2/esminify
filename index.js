@@ -26,6 +26,17 @@ const defaultConfig = {
   // simplifyComparisons: false
 };
 
+function copyFile(s, d) {
+  let st = fs.lstatSync(s);
+  if (st.isSymbolicLink()) {
+    var link = fs.readlinkSync(s);
+    fs.sync().mkdir(path.dirname(d));
+    fs.symlinkSync(link, d);
+  } else {
+    fs.sync().save(d, fs.readFileSync(s));
+  }
+}
+
 function checkRequiredOpt(opt) {
   if (!opt.input) {
     opt.input = opt.srcDir;
@@ -51,7 +62,7 @@ function transform(opt) {
     }
   }
   var code;
-  var res;
+  var res = {};
   var sheBang = false;
 
   var option = {
@@ -90,7 +101,7 @@ function transform(opt) {
   } catch (e) {
     if (e.code === 'BABEL_PARSE_ERROR' || e.code === 'BABEL_TRANSFORM_ERROR') {
       console.log('[minify error] file:', opt.input, e.message, 'skip minify this file');
-      res.code = code;
+      res = {code};
     }
   }
 
@@ -215,7 +226,7 @@ function minify(opt, callback) {
           }
         }
         log.info('copy file:', relfile);
-        fs.sync().save(path.join(dest, relfile), fs.readFileSync(file));
+        copyFile(file, path.join(dest, relfile));
         return done();
       }
       try {
@@ -259,15 +270,19 @@ function minify(opt, callback) {
   }
 }
 
-// module.exports.compile = compile;
-exports.processFiles = minify;
+module.exports = minify;
 
-exports.minify = minify;
+// module.exports.compile = compile;
+minify.processFiles = minify;
+
+minify.minify = minify;
+
+minify.copyFile = copyFile;
 
 /**
  * parse code into ast
  */
-exports.parse = function (str, opt) {
+minify.parse = function (str, opt) {
   return babel.transformSync(str, {
     ast: true,
     code: false

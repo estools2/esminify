@@ -1,6 +1,6 @@
 {
   "name": "esminify",
-  "version": "4.0.4",
+  "version": "4.0.5",
   "description": "The ECMAScript(javascript) minify tool",
   "main": "index.js",
   "scripts": {
