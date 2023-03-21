@@ -1,6 +1,6 @@
 {
   "name": "esminify",
-  "version": "4.0.5",
+  "version": "4.0.6",
   "description": "The ECMAScript(javascript) minify tool",
   "main": "index.js",
   "scripts": {
@@ -27,12 +27,12 @@
   },
   "homepage": "https://github.com/estools2/esminify#readme",
   "dependencies": {
-    "@babel/core": "7.17.0",
-    "babel-preset-minify": "0.5.1",
+    "@babel/core": "7.21.3",
+    "babel-preset-minify": "0.5.2",
     "commander": "2.10.0",
     "litelog": "^3.0.6",
     "lodash": "4.17.21",
-    "xfs": "0.2.3"
+    "xfs": "0.2.6"
   },
   "devDependencies": {
     "mocha": "^3.5.3",
